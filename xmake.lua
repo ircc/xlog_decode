@@ -14,9 +14,41 @@ add_requires("zstd", {configs = {shared = false, cmake = true}})
 -- 定义版本号宏
 add_defines("XLOG_DECODE_VERSION=\"$(version)\"")
 
+-- 调试模式配置
+if is_mode("debug") then
+    -- 启用完整的调试信息
+    set_symbols("debug")
+    add_cxflags("/Zi", "/Od", "/Ob0", {force = true})
+    add_ldflags("/DEBUG:FULL", {force = true})
+
+    -- 禁用优化以便更容易调试
+    set_optimize("none")
+end
+
+
 -- 平台特定配置
 if is_plat("windows") then
     add_defines("NOMINMAX", "WIN32_LEAN_AND_MEAN", "NOGDI", "NOUSER")
+    if is_mode("debug") then
+        add_cxflags("/ZI") -- 启用编辑并继续调试
+        add_ldflags("/INCREMENTAL")
+    end
+elseif is_plat("linux") then
+    if is_mode("debug") then
+        add_cxflags("-g3", "-O0") -- 生成完整调试信息，禁用优化
+        add_ldflags("-rdynamic") -- 导出所有符号，方便调试
+    end
+elseif is_plat("macosx") then
+    if is_mode("debug") then
+        add_cxflags("-g", "-O0") -- 生成调试信息，禁用优化
+        add_cxflags("-fno-omit-frame-pointer") -- 保留完整调用栈信息
+    end
+elseif is_plat("android") or is_plat("iphoneos") then
+    -- 移动平台的调试配置
+    if is_mode("debug") then
+        add_cxflags("-g", "-O0")
+        add_cxflags("-fno-omit-frame-pointer")
+    end
 end
 
 -- 设置构建选项
