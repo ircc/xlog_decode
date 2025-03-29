@@ -2,16 +2,17 @@ name: Build
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, master ]
     tags: [ 'v*' ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, master ]
+  workflow_dispatch: # 添加手动触发选项
 
 jobs:
   build-windows:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Setup xmake
       uses: xmake-io/github-action-setup-xmake@v1
@@ -32,15 +33,15 @@ jobs:
         Compress-Archive -Path dist/* -DestinationPath xlog_decode-win-x64.zip
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: xlog_decode-win-x64
         path: xlog_decode-win-x64.zip
 
-  build-macos:
+  build-macos-intel:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Setup xmake
       uses: xmake-io/github-action-setup-xmake@v1
@@ -61,15 +62,44 @@ jobs:
         zip -r xlog_decode-macos-x64.zip dist/*
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: xlog_decode-macos-x64
         path: xlog_decode-macos-x64.zip
 
+  build-macos-arm:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup xmake
+      uses: xmake-io/github-action-setup-xmake@v1
+      with:
+        xmake-version: latest
+
+    - name: Build for ARM
+      run: |
+        xmake config -p macosx -a arm64 -m release
+        xmake
+
+    - name: Package
+      run: |
+        mkdir -p dist
+        xmake install -o dist
+        cp LICENSE dist/
+        cp README.md dist/
+        zip -r xlog_decode-macos-arm64.zip dist/*
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: xlog_decode-macos-arm64
+        path: xlog_decode-macos-arm64.zip
+
   build-linux:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Setup xmake
       uses: xmake-io/github-action-setup-xmake@v1
@@ -90,18 +120,18 @@ jobs:
         zip -r xlog_decode-linux-x64.zip dist/*
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: xlog_decode-linux-x64
         path: xlog_decode-linux-x64.zip
 
   release:
     if: startsWith(github.ref, 'refs/tags/')
-    needs: [build-windows, build-macos, build-linux]
+    needs: [build-windows, build-macos-intel, build-macos-arm, build-linux]
     runs-on: ubuntu-latest
     steps:
     - name: Download all artifacts
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
 
     - name: Create Release
       id: create_release
@@ -124,7 +154,7 @@ jobs:
         asset_name: xlog_decode-win-x64.zip
         asset_content_type: application/zip
 
-    - name: Upload macOS Build
+    - name: Upload macOS Intel Build
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -132,6 +162,16 @@ jobs:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./xlog_decode-macos-x64/xlog_decode-macos-x64.zip
         asset_name: xlog_decode-macos-x64.zip
+        asset_content_type: application/zip
+
+    - name: Upload macOS ARM Build
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./xlog_decode-macos-arm64/xlog_decode-macos-arm64.zip
+        asset_name: xlog_decode-macos-arm64.zip
         asset_content_type: application/zip
 
     - name: Upload Linux Build

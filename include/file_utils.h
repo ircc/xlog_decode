@@ -45,6 +45,9 @@ class FileUtils {
   static bool WriteFile(const std::string& file_path,
                         const std::vector<uint8_t>& buffer);
 
+  // Get file size in bytes
+  static uint64_t GetFileSize(const std::string& file_path);
+
   // Scan a directory for files with a specific extension (recursively if
   // requested)
   static std::vector<std::string> ScanDirectory(

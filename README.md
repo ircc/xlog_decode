@@ -12,9 +12,10 @@ xlog_decode 是一个轻量级、高效的命令行工具，专门用于解码XL
 
 主要功能:
 - 支持解码单个XLOG格式文件（.xlog和.mmap3后缀）
-- 支持递归解码目录中的所有XLOG文件
+- 支持递归解码目录中的所有XLOG文件（默认启用）
 - 支持跳过错误数据块，提高解码成功率
-- 支持清理已解码文件
+- 支持清理已解码文件（默认递归处理）
+- 显示每个文件解码前后的大小和处理时间
 - 跨平台支持：Windows、macOS和Linux
 
 ## 安装
@@ -46,20 +47,21 @@ xlog_decode - XLOG格式日志文件解码工具
   xlog_decode <命令> [选项] <路径>
 
 命令:
-  decode   - 解码一个或多个XLOG文件
-  clean    - 删除目录中所有已解码文件
+  decode   - 解码一个或多个XLOG文件（默认递归处理）
+  clean    - 删除目录中所有已解码文件（默认递归处理）
   help     - 显示帮助信息
 
 选项:
-  -r, --recursive   - 递归处理子目录中的文件
-  -k, --keep-errors - 解码时不跳过错误数据块
-  -v, --version     - 显示版本信息
+  --no-recursive    - 禁用递归处理
+  --keep-errors     - 解码时不跳过错误数据块
+  --version         - 显示版本信息
 
 示例:
   xlog_decode help                        - 显示帮助信息
   xlog_decode decode path/to/file.xlog    - 解码单个文件
-  xlog_decode decode -r path/to/dir       - 递归解码目录中所有XLOG文件
-  xlog_decode clean -r path/to/dir        - 递归删除目录中所有已解码文件
+  xlog_decode decode path/to/dir          - 递归解码目录中所有XLOG文件
+  xlog_decode decode --no-recursive path/to/dir - 只解码目录中的XLOG文件，不包括子目录
+  xlog_decode clean path/to/dir           - 递归删除目录中所有已解码文件
 ```
 
 ### 命令详解
@@ -70,13 +72,11 @@ xlog_decode - XLOG格式日志文件解码工具
 ```
 xlog_decode help
 xlog_decode --help
-xlog_decode -h
 ```
 
 显示版本信息:
 ```
 xlog_decode --version
-xlog_decode -v
 ```
 
 #### 解码命令
@@ -86,31 +86,31 @@ xlog_decode -v
    xlog_decode decode /path/to/logfile.xlog
    ```
 
-2. 递归解码目录中的所有文件:
+2. 递归解码目录中的所有文件（默认行为）:
    ```
-   xlog_decode decode -r /path/to/logs/
-   ```
-
-3. 解码时不跳过错误数据块:
-   ```
-   xlog_decode decode -k /path/to/logfile.xlog
+   xlog_decode decode /path/to/logs/
    ```
 
-4. 组合使用多个选项:
+3. 只解码目录中的文件，不包括子目录:
    ```
-   xlog_decode decode -r -k /path/to/logs/
+   xlog_decode decode --no-recursive /path/to/logs/
+   ```
+
+4. 解码时不跳过错误数据块:
+   ```
+   xlog_decode decode --keep-errors /path/to/logfile.xlog
    ```
 
 #### 清理命令
 
-1. 删除目录中所有已解码文件:
+1. 删除目录中所有已解码文件（默认递归处理）:
    ```
    xlog_decode clean /path/to/logs/
    ```
 
-2. 递归删除目录及其子目录中所有已解码文件:
+2. 只删除目录中的已解码文件，不包括子目录:
    ```
-   xlog_decode clean -r /path/to/logs/
+   xlog_decode clean --no-recursive /path/to/logs/
    ```
 
 ## 开发指南

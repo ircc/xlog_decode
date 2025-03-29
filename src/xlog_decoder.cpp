@@ -95,19 +95,12 @@ bool XlogDecoder::IsZipFile(const std::string& file_path) {
 }
 
 std::string XlogDecoder::GenerateOutputFilename(const std::string& input_file) {
-  std::string file_name = FileUtils::GetFileName(input_file);
+  // 获取原文件所在目录
   std::string dir_name = FileUtils::GetDirectoryName(input_file);
-
-  // Replace .xlog with _.log or append _.log if not .xlog
-  if (FileUtils::HasExtension(file_name, kXlogFileExt)) {
-    file_name.replace(file_name.length() - 5, 5, "_.log");
-  } else if (FileUtils::HasExtension(file_name, kMmapFileExt)) {
-    file_name.replace(file_name.length() - 6, 6, "_.log");
-  } else {
-    file_name += "_.log";
-  }
-
-  return FileUtils::JoinPath(dir_name, file_name);
+  // 获取原文件名（带扩展名）
+  std::string base_filename = FileUtils::GetFileName(input_file);
+  // 生成新文件路径：原目录/原文件名_.log
+  return FileUtils::JoinPath(dir_name, base_filename + "_.log");
 }
 
 bool XlogDecoder::DecodeFile(const std::string& input_file,
@@ -123,19 +116,11 @@ bool XlogDecoder::DecodeFile(const std::string& input_file,
 
   // Determine file type and call appropriate decoder
   if (IsMarsXlogV2(input_file) || IsMarsXlogV3(input_file)) {
-    std::cout << "Detected Mars Xlog format" << std::endl;
     return ParseMarsXlogFile(input_file, output_file, skip_error_blocks);
   } else if (IsZipFile(input_file)) {
-    std::cout << "Detected ZIP format" << std::endl;
     return DecodeZipFile(input_file, output_file);
   } else {
-    std::cout << "Unknown format, trying Mars Xlog decoding" << std::endl;
-    if (ParseMarsXlogFile(input_file, output_file, skip_error_blocks)) {
-      return true;
-    }
-
-    std::cout << "Mars Xlog decoding failed, trying ZIP format" << std::endl;
-    return DecodeZipFile(input_file, output_file);
+    return ParseMarsXlogFile(input_file, output_file, skip_error_blocks);
   }
 }
 

@@ -162,7 +162,7 @@ std::vector<std::string> FileUtils::ScanDirectory(
 std::vector<std::string> FileUtils::FindDecodedFiles(
     const std::string& dir_path,
     bool recurse) {
-  // Decoded files have the extension .xlog_.log
+  // 解码后的文件以"_.log"结尾
   const std::string kDecodedFileExt = "_.log";
   std::vector<std::string> result;
 
@@ -184,7 +184,7 @@ std::vector<std::string> FileUtils::FindDecodedFiles(
         result.insert(result.end(), sub_dir_files.begin(), sub_dir_files.end());
       }
     } else {
-      // For files, check if name ends with "_.log"
+      // 检查文件名是否以"_.log"结尾
       if (file_path.length() >= 5 &&
           file_path.substr(file_path.length() - 5) == kDecodedFileExt) {
         result.push_back(file_path);
@@ -295,6 +295,19 @@ std::vector<std::string> FileUtils::ListFilesInDirectory(
 #endif
 
   return files;
+}
+
+// Get file size in bytes
+uint64_t FileUtils::GetFileSize(const std::string& file_path) {
+  try {
+    std::ifstream file(file_path, std::ios::binary | std::ios::ate);
+    if (!file.is_open()) {
+      return 0;
+    }
+    return static_cast<uint64_t>(file.tellg());
+  } catch (...) {
+    return 0;
+  }
 }
 
 }  // namespace xlog_decode

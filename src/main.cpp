@@ -4,6 +4,7 @@
 // main.cpp - Main entry point for the xlog_decode tool
 
 #include <chrono>
+#include <iomanip>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -29,16 +30,16 @@ void PrintUsage() {
   std::cout << "Usage:\n";
   std::cout << "  xlog_decode <command> [options] <path>\n\n";
   std::cout << "Commands:\n";
-  std::cout << "  decode   - Decode one or more XLOG files\n";
-  std::cout << "  clean    - Delete all decoded files in a directory\n";
+  std::cout
+      << "  decode   - Decode one or more XLOG files (recursive by default)\n";
+  std::cout << "  clean    - Delete all decoded files in a directory "
+               "(recursive by default)\n";
   std::cout << "  help     - Show this help information\n\n";
   std::cout << "Options:\n";
-  std::cout << "  -r, --recursive   - Process files recursively in "
-               "subdirectories (enabled by default for decode)\n";
   std::cout << "  --no-recursive    - Disable recursive processing\n";
-  std::cout << "  -k, --keep-errors - Don't skip blocks with errors during "
+  std::cout << "  --keep-errors     - Don't skip blocks with errors during "
                "decoding\n";
-  std::cout << "  -v, --version     - Show version information\n\n";
+  std::cout << "  --version         - Show version information\n\n";
   std::cout << "Examples:\n";
   std::cout
       << "  xlog_decode help                        - Show help information\n";
@@ -48,7 +49,7 @@ void PrintUsage() {
                "files in directory and subdirectories\n";
   std::cout << "  xlog_decode decode --no-recursive path/to/dir - Decode XLOG "
                "files only in the top directory\n";
-  std::cout << "  xlog_decode clean -r path/to/dir        - Delete all decoded "
+  std::cout << "  xlog_decode clean path/to/dir           - Delete all decoded "
                "files in directory and subdirectories\n";
 }
 
@@ -59,7 +60,9 @@ bool DecodeFile(const std::string& file_path, bool skip_error_blocks) {
     std::string output_file =
         xlog_decode::XlogDecoder::GenerateOutputFilename(file_path);
 
-    std::cout << "Decoding: " << file_path << std::endl;
+    // Get input file size
+    auto input_file_size = xlog_decode::FileUtils::GetFileSize(file_path);
+    double input_size_mb = static_cast<double>(input_file_size) / (1024 * 1024);
 
     // Add timing measurement
     auto start_time = std::chrono::high_resolution_clock::now();
@@ -72,12 +75,21 @@ bool DecodeFile(const std::string& file_path, bool skip_error_blocks) {
         end_time - start_time);
 
     if (result) {
-      std::cout << "Successfully decoded to: " << output_file
-                << " (Time: " << duration.count() << "ms)" << std::endl;
+      // Get output file size
+      auto output_file_size = xlog_decode::FileUtils::GetFileSize(output_file);
+      double output_size_mb =
+          static_cast<double>(output_file_size) / (1024 * 1024);
+
+      std::cout << output_file << " (cost: " << duration.count() << "ms, "
+                << "size: " << std::fixed << std::setprecision(2)
+                << input_size_mb << "MB -> " << output_size_mb << "MB)"
+                << std::endl;
       return true;
     } else {
       std::cerr << "Failed to decode file: " << file_path
-                << " (Time: " << duration.count() << "ms)" << std::endl;
+                << " (cost: " << duration.count() << "ms, "
+                << "size: " << std::fixed << std::setprecision(2)
+                << input_size_mb << "MB)" << std::endl;
       return false;
     }
   } catch (const std::exception& e) {
@@ -100,11 +112,9 @@ int ProcessDecodeCommand(const std::vector<std::string>& args) {
 
   // Parse options
   for (size_t i = 0; i < args.size(); ++i) {
-    if (args[i] == "-r" || args[i] == "--recursive") {
-      recursive = true;
-    } else if (args[i] == "--no-recursive") {
+    if (args[i] == "--no-recursive") {
       recursive = false;  // Add option to disable recursive search
-    } else if (args[i] == "-k" || args[i] == "--keep-errors") {
+    } else if (args[i] == "--keep-errors") {
       skip_error_blocks = false;
     } else if (path.empty()) {
       path = args[i];
@@ -169,13 +179,13 @@ int ProcessCleanCommand(const std::vector<std::string>& args) {
     return 1;
   }
 
-  bool recursive = false;
+  bool recursive = true;  // Set recursive to true by default
   std::string path;
 
   // Parse options
   for (size_t i = 0; i < args.size(); ++i) {
-    if (args[i] == "-r" || args[i] == "--recursive") {
-      recursive = true;
+    if (args[i] == "--no-recursive") {
+      recursive = false;  // Option to disable recursive mode
     } else if (path.empty()) {
       path = args[i];
     }
@@ -331,9 +341,9 @@ int main(int argc, char* argv[]) {
     return ProcessDecodeCommand(args);
   } else if (command == "clean") {
     return ProcessCleanCommand(args);
-  } else if (command == "help" || command == "--help" || command == "-h") {
+  } else if (command == "help" || command == "--help") {
     return ProcessHelpCommand(args);
-  } else if (command == "--version" || command == "-v") {
+  } else if (command == "--version") {
     return ProcessVersionCommand();
   } else {
     std::cerr << "Error: Unknown command '" << command << "'\n\n";
