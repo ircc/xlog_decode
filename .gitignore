@@ -1,0 +1,33 @@
+# Build directories
+/build/
+/out/
+
+# Generated files
+*.d
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+
+# IDE files
+.vs/
+.vscode/
+.idea/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.xcodeproj/
+*.swp
+*~
+
+# OS specific files
+.DS_Store
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
