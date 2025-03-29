@@ -1,6 +1,6 @@
 # xlog_decode
 
-[![Build Status](https://github.com/username/xlog_decode/workflows/Build/badge.svg)](https://github.com/username/xlog_decode/actions)
+[![Build Status](https://github.com/ircc/xlog_decode/workflows/Build/badge.svg)](https://github.com/ircc/xlog_decode/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![Version](https://img.shields.io/badge/version-1.0.0-blue)
 
@@ -22,7 +22,7 @@ xlog_decode 是一个轻量级、高效的命令行工具，专门用于解码XL
 
 ### 从预编译二进制文件安装
 
-从 [Release 页面](https://github.com/username/xlog_decode/releases) 下载适合您平台的最新版本：
+从 [Release 页面](https://github.com/ircc/xlog_decode/releases) 下载适合您平台的最新版本：
 
 - Windows: `xlog_decode-win-x64.zip`
 - macOS Intel: `xlog_decode-macos-x64.zip`
@@ -85,11 +85,13 @@ xlog_decode --version
    ```
    xlog_decode decode /path/to/logfile.xlog
    ```
+   解码后的文件会保存为 `/path/to/logfile.xlog_.log`
 
 2. 递归解码目录中的所有文件（默认行为）:
    ```
    xlog_decode decode /path/to/logs/
    ```
+   所有解码文件都会保存为 `原文件名_.log` 格式
 
 3. 只解码目录中的文件，不包括子目录:
    ```
@@ -107,6 +109,7 @@ xlog_decode --version
    ```
    xlog_decode clean /path/to/logs/
    ```
+   将删除所有 `*_.log` 结尾的解码文件
 
 2. 只删除目录中的已解码文件，不包括子目录:
    ```
@@ -123,7 +126,7 @@ xlog_decode --version
 ### 获取源代码
 
 ```bash
-git clone https://github.com/username/xlog_decode.git
+git clone https://github.com/ircc/xlog_decode.git
 cd xlog_decode
 ```
 

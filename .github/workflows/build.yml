@@ -34,6 +34,7 @@ jobs:
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
+      id: upload-win-artifact
       with:
         name: xlog_decode-win-x64
         path: xlog_decode-win-x64.zip
@@ -63,6 +64,7 @@ jobs:
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
+      id: upload-macos-intel-artifact
       with:
         name: xlog_decode-macos-x64
         path: xlog_decode-macos-x64.zip
@@ -92,6 +94,7 @@ jobs:
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
+      id: upload-macos-arm-artifact
       with:
         name: xlog_decode-macos-arm64
         path: xlog_decode-macos-arm64.zip
@@ -121,6 +124,7 @@ jobs:
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
+      id: upload-linux-artifact
       with:
         name: xlog_decode-linux-x64
         path: xlog_decode-linux-x64.zip
@@ -132,6 +136,8 @@ jobs:
     steps:
     - name: Download all artifacts
       uses: actions/download-artifact@v3
+      with:
+        path: ./artifacts
 
     - name: Create Release
       id: create_release
@@ -150,7 +156,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./xlog_decode-win-x64/xlog_decode-win-x64.zip
+        asset_path: ./artifacts/xlog_decode-win-x64/xlog_decode-win-x64.zip
         asset_name: xlog_decode-win-x64.zip
         asset_content_type: application/zip
 
@@ -160,7 +166,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./xlog_decode-macos-x64/xlog_decode-macos-x64.zip
+        asset_path: ./artifacts/xlog_decode-macos-x64/xlog_decode-macos-x64.zip
         asset_name: xlog_decode-macos-x64.zip
         asset_content_type: application/zip
 
@@ -170,7 +176,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./xlog_decode-macos-arm64/xlog_decode-macos-arm64.zip
+        asset_path: ./artifacts/xlog_decode-macos-arm64/xlog_decode-macos-arm64.zip
         asset_name: xlog_decode-macos-arm64.zip
         asset_content_type: application/zip
 
@@ -180,6 +186,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./xlog_decode-linux-x64/xlog_decode-linux-x64.zip
+        asset_path: ./artifacts/xlog_decode-linux-x64/xlog_decode-linux-x64.zip
         asset_name: xlog_decode-linux-x64.zip
         asset_content_type: application/zip
