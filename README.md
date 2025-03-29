@@ -39,27 +39,47 @@ xlog_decode 是一个轻量级、高效的命令行工具，专门用于解码XL
 xlog_decode 提供了简单直观的命令行界面：
 
 ```
-xlog_decode - A tool for decoding XLOG format log files
-Version: 1.0.0
+xlog_decode - XLOG格式日志文件解码工具
+版本: 1.0.0
 
-Usage:
-  xlog_decode <command> [options] <path>
+用法:
+  xlog_decode <命令> [选项] <路径>
 
-Commands:
-  decode   - Decode one or more XLOG files
-  clean    - Delete all decoded files in a directory
+命令:
+  decode   - 解码一个或多个XLOG文件
+  clean    - 删除目录中所有已解码文件
+  help     - 显示帮助信息
 
-Options:
-  -r, --recursive   - Process files recursively in subdirectories
-  -k, --keep-errors - Don't skip blocks with errors during decoding
+选项:
+  -r, --recursive   - 递归处理子目录中的文件
+  -k, --keep-errors - 解码时不跳过错误数据块
+  -v, --version     - 显示版本信息
 
-Examples:
-  xlog_decode decode path/to/file.xlog        - Decode a single file
-  xlog_decode decode -r path/to/dir           - Decode all XLOG files in directory and subdirectories
-  xlog_decode clean -r path/to/dir            - Delete all decoded files in directory and subdirectories
+示例:
+  xlog_decode help                        - 显示帮助信息
+  xlog_decode decode path/to/file.xlog    - 解码单个文件
+  xlog_decode decode -r path/to/dir       - 递归解码目录中所有XLOG文件
+  xlog_decode clean -r path/to/dir        - 递归删除目录中所有已解码文件
 ```
 
-### 示例
+### 命令详解
+
+#### 帮助与版本信息
+
+显示帮助信息:
+```
+xlog_decode help
+xlog_decode --help
+xlog_decode -h
+```
+
+显示版本信息:
+```
+xlog_decode --version
+xlog_decode -v
+```
+
+#### 解码命令
 
 1. 解码单个文件:
    ```
@@ -71,7 +91,24 @@ Examples:
    xlog_decode decode -r /path/to/logs/
    ```
 
-3. 删除目录中所有已解码文件:
+3. 解码时不跳过错误数据块:
+   ```
+   xlog_decode decode -k /path/to/logfile.xlog
+   ```
+
+4. 组合使用多个选项:
+   ```
+   xlog_decode decode -r -k /path/to/logs/
+   ```
+
+#### 清理命令
+
+1. 删除目录中所有已解码文件:
+   ```
+   xlog_decode clean /path/to/logs/
+   ```
+
+2. 递归删除目录及其子目录中所有已解码文件:
    ```
    xlog_decode clean -r /path/to/logs/
    ```

@@ -11,6 +11,9 @@ set_languages("c++17")
 add_requires("zlib", {configs = {shared = false}})
 add_requires("zstd", {configs = {shared = false, cmake = true}})
 
+-- 定义版本号宏
+add_defines("XLOG_DECODE_VERSION=\"$(version)\"")
+
 -- 平台特定配置
 if is_plat("windows") then
     add_defines("NOMINMAX", "WIN32_LEAN_AND_MEAN", "NOGDI", "NOUSER")

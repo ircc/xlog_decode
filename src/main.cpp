@@ -11,29 +11,41 @@
 #include "xlog_constants.h"
 #include "xlog_decoder.h"
 
+// Version information is now provided by the build system via
+// XLOG_DECODE_VERSION macro
+
 using namespace xlog_decode;
+
+// Get program version
+const std::string GetVersion() {
+  return "1.0.0";  // Hardcoded version until macro issue is fixed
+}
 
 // Print program usage
 void PrintUsage() {
   std::cout << "xlog_decode - A tool for decoding XLOG format log files\n";
-  std::cout << "Version: 1.0.0\n\n";
+  std::cout << "Version: " << GetVersion() << "\n\n";
   std::cout << "Usage:\n";
   std::cout << "  xlog_decode <command> [options] <path>\n\n";
   std::cout << "Commands:\n";
   std::cout << "  decode   - Decode one or more XLOG files\n";
-  std::cout << "  clean    - Delete all decoded files in a directory\n\n";
+  std::cout << "  clean    - Delete all decoded files in a directory\n";
+  std::cout << "  help     - Show this help information\n\n";
   std::cout << "Options:\n";
   std::cout
       << "  -r, --recursive   - Process files recursively in subdirectories\n";
   std::cout << "  -k, --keep-errors - Don't skip blocks with errors during "
-               "decoding\n\n";
+               "decoding\n";
+  std::cout << "  -v, --version     - Show version information\n\n";
   std::cout << "Examples:\n";
-  std::cout << "  xlog_decode decode path/to/file.xlog        - Decode a "
-               "single file\n";
-  std::cout << "  xlog_decode decode -r path/to/dir           - Decode all "
-               "XLOG files in directory and subdirectories\n";
-  std::cout << "  xlog_decode clean -r path/to/dir            - Delete all "
-               "decoded files in directory and subdirectories\n";
+  std::cout
+      << "  xlog_decode help                        - Show help information\n";
+  std::cout
+      << "  xlog_decode decode path/to/file.xlog    - Decode a single file\n";
+  std::cout << "  xlog_decode decode -r path/to/dir       - Decode all XLOG "
+               "files in directory and subdirectories\n";
+  std::cout << "  xlog_decode clean -r path/to/dir        - Delete all decoded "
+               "files in directory and subdirectories\n";
 }
 
 // Decode a single file
@@ -95,6 +107,8 @@ int ProcessDecodeCommand(const std::vector<std::string>& args) {
     // Process directory
     std::vector<std::string> extensions = {kXlogFileExt, kMmapFileExt};
 
+    std::cout << "Searching for XLOG files"
+              << (recursive ? " (recursively)" : "") << "..." << std::endl;
     std::vector<std::string> files =
         xlog_decode::FileUtils::ScanDirectory(path, extensions, recursive);
 
@@ -104,6 +118,8 @@ int ProcessDecodeCommand(const std::vector<std::string>& args) {
       return 0;
     }
 
+    std::cout << "Found " << files.size() << " XLOG files, starting decode..."
+              << std::endl;
     int success_count = 0;
     for (const auto& file : files) {
       if (DecodeFile(file, skip_error_blocks)) {
@@ -163,6 +179,8 @@ int ProcessCleanCommand(const std::vector<std::string>& args) {
     return 1;
   }
 
+  std::cout << "Searching for decoded files"
+            << (recursive ? " (recursively)" : "") << "..." << std::endl;
   std::vector<std::string> files =
       xlog_decode::FileUtils::FindDecodedFiles(path, recursive);
 
@@ -172,6 +190,8 @@ int ProcessCleanCommand(const std::vector<std::string>& args) {
     return 0;
   }
 
+  std::cout << "Found " << files.size()
+            << " decoded files, starting deletion..." << std::endl;
   int deleted_count = 0;
   for (const auto& file : files) {
     std::cout << "Deleting: " << file << std::endl;
@@ -185,7 +205,22 @@ int ProcessCleanCommand(const std::vector<std::string>& args) {
   return 0;
 }
 
-void test_file_utils() {
+// Process help command
+int ProcessHelpCommand(const std::vector<std::string>& args) {
+  PrintUsage();
+  return 0;
+}
+
+// Process version command
+int ProcessVersionCommand() {
+  std::cout << "xlog_decode version " << GetVersion() << std::endl;
+  std::cout << "Copyright (c) 2023-2024 xlog_decode contributors" << std::endl;
+  std::cout << "Licensed under the MIT License" << std::endl;
+  return 0;
+}
+
+// Test file utilities
+void TestFileUtils() {
   std::cout << "Testing FileUtils functionality..." << std::endl;
 
   // Test path operations
@@ -244,15 +279,46 @@ void test_file_utils() {
 }
 
 int main(int argc, char* argv[]) {
+  // Development test mode
+#ifdef XLOG_DECODE_TEST_MODE
   std::cout << "XLog Decoder Test Program" << std::endl;
-
   try {
-    test_file_utils();
+    TestFileUtils();
   } catch (const std::exception& e) {
     std::cerr << "Exception: " << e.what() << std::endl;
     return 1;
   }
-
   std::cout << "All tests completed!" << std::endl;
   return 0;
+#endif
+
+  // Command line mode
+  if (argc < 2) {
+    std::cerr << "Error: Missing command argument\n\n";
+    PrintUsage();
+    return 1;
+  }
+
+  std::string command = argv[1];
+  std::vector<std::string> args;
+
+  // Collect command line arguments
+  for (int i = 2; i < argc; ++i) {
+    args.push_back(argv[i]);
+  }
+
+  // Process commands
+  if (command == "decode") {
+    return ProcessDecodeCommand(args);
+  } else if (command == "clean") {
+    return ProcessCleanCommand(args);
+  } else if (command == "help" || command == "--help" || command == "-h") {
+    return ProcessHelpCommand(args);
+  } else if (command == "--version" || command == "-v") {
+    return ProcessVersionCommand();
+  } else {
+    std::cerr << "Error: Unknown command '" << command << "'\n\n";
+    PrintUsage();
+    return 1;
+  }
 }
