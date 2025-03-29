@@ -63,8 +63,6 @@ bool DecodeFile(const std::string& file_path, bool skip_error_blocks) {
     auto input_file_size = xlog_decode::FileUtils::GetFileSize(file_path);
     double input_size_mb = static_cast<double>(input_file_size) / (1024 * 1024);
 
-    std::cout << "Decoding: " << file_path << std::endl;
-
     // 添加时间测量
     auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -81,16 +79,15 @@ bool DecodeFile(const std::string& file_path, bool skip_error_blocks) {
       double output_size_mb =
           static_cast<double>(output_file_size) / (1024 * 1024);
 
-      std::cout << "Successfully decoded to: " << output_file
-                << " (Time: " << duration.count() << "ms, "
-                << "Size: " << std::fixed << std::setprecision(2)
+      std::cout << output_file << " (cost: " << duration.count() << "ms, "
+                << "size: " << std::fixed << std::setprecision(2)
                 << input_size_mb << "MB -> " << output_size_mb << "MB)"
                 << std::endl;
       return true;
     } else {
       std::cerr << "Failed to decode file: " << file_path
-                << " (Time: " << duration.count() << "ms, "
-                << "Size: " << std::fixed << std::setprecision(2)
+                << " (cost: " << duration.count() << "ms, "
+                << "size: " << std::fixed << std::setprecision(2)
                 << input_size_mb << "MB)" << std::endl;
       return false;
     }
