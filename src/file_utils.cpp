@@ -1,11 +1,11 @@
 // Copyright (c) 2023-2024 xlog_decode contributors
 // Licensed under the MIT License
 //
-// file_utils.cpp - Implementation of the FileUtils class
+// file_utils.cpp - FileUtils类的实现
 
 #include "../include/file_utils.h"
 
-// Standard library headers
+// 标准库头文件
 #include <sys/stat.h>
 #include <algorithm>
 #include <cstdio>
@@ -39,7 +39,7 @@ bool FileUtils::IsDirectory(const std::string& path) {
 
 bool FileUtils::HasExtension(const std::string& file_path,
                              const std::string& extension) {
-  // Check if file has the specified extension
+  // 检查文件是否有指定的扩展名
   std::string file_ext = GetFileExtension(file_path);
   return file_ext == extension;
 }
@@ -91,12 +91,12 @@ bool FileUtils::ReadFile(const std::string& file_path,
     return false;
   }
 
-  // Get file size
+  // 获取文件大小
   file.seekg(0, std::ios::end);
   std::streamsize file_size = file.tellg();
   file.seekg(0, std::ios::beg);
 
-  // Resize buffer and read file content
+  // 调整缓冲区大小并读取文件内容
   buffer.resize(file_size);
   if (!file.read(reinterpret_cast<char*>(buffer.data()), file_size)) {
     std::cerr << "Failed to read file: " << file_path << std::endl;
@@ -134,20 +134,20 @@ std::vector<std::string> FileUtils::ScanDirectory(
     return result;
   }
 
-  // Get all files in the directory
+  // 获取目录中的所有文件
   std::vector<std::string> files = ListFilesInDirectory(dir_path);
 
-  // Process all files
+  // 处理所有文件
   for (const auto& file_path : files) {
     if (IsDirectory(file_path)) {
-      // If directory and recursive scanning is enabled, scan subdirectory
+      // 如果是目录且启用了递归扫描，扫描子目录
       if (recurse) {
         std::vector<std::string> sub_dir_files =
             ScanDirectory(file_path, extensions, recurse);
         result.insert(result.end(), sub_dir_files.begin(), sub_dir_files.end());
       }
     } else {
-      // For files, check the extension
+      // 对于文件，检查扩展名
       std::string ext = GetFileExtension(file_path);
       if (std::find(extensions.begin(), extensions.end(), ext) !=
           extensions.end()) {
@@ -171,13 +171,13 @@ std::vector<std::string> FileUtils::FindDecodedFiles(
     return result;
   }
 
-  // Get all files in the directory
+  // 获取目录中的所有文件
   std::vector<std::string> files = ListFilesInDirectory(dir_path);
 
-  // Process all files
+  // 处理所有文件
   for (const auto& file_path : files) {
     if (IsDirectory(file_path)) {
-      // If directory and recursive scanning is enabled, scan subdirectory
+      // 如果是目录且启用了递归扫描，扫描子目录
       if (recurse) {
         std::vector<std::string> sub_dir_files =
             FindDecodedFiles(file_path, recurse);
@@ -205,26 +205,26 @@ bool FileUtils::FileExists(const std::string& file_path) {
 }
 
 bool FileUtils::CreateDirectory(const std::string& directory_path) {
-  // For nested directories, create recursively
+  // 对于嵌套目录，递归创建
   if (directory_path.empty()) {
     return false;
   }
 
-  // Check if directory already exists
+  // 检查目录是否已存在
   if (FileExists(directory_path) && IsDirectory(directory_path)) {
     return true;
   }
 
-  // Get parent directory
+  // 获取父目录
   std::string parent = GetDirectoryName(directory_path);
   if (!parent.empty() && !FileExists(parent)) {
-    // Create parent directory first
+    // 先创建父目录
     if (!CreateDirectory(parent)) {
       return false;
     }
   }
 
-  // Create current directory
+  // 创建当前目录
 #if defined(_WIN32)
   return _mkdir(directory_path.c_str()) == 0;
 #else
@@ -255,7 +255,7 @@ std::vector<std::string> FileUtils::ListFilesInDirectory(
   }
 
 #if defined(_WIN32)
-  // On Windows, use popen to execute dir command
+  // 在Windows上，使用popen执行dir命令
   std::string cmd = "dir /b \"" + directory_path + "\" 2>nul";
   FILE* pipe = _popen(cmd.c_str(), "r");
   if (!pipe) {
@@ -264,7 +264,7 @@ std::vector<std::string> FileUtils::ListFilesInDirectory(
 
   char buffer[1024];
   while (fgets(buffer, sizeof(buffer), pipe)) {
-    // Remove line break
+    // 移除换行符
     size_t len = strlen(buffer);
     if (len > 0 && (buffer[len - 1] == '\n' || buffer[len - 1] == '\r')) {
       buffer[len - 1] = 0;
@@ -273,7 +273,7 @@ std::vector<std::string> FileUtils::ListFilesInDirectory(
       buffer[len - 2] = 0;
     }
 
-    // Skip "." and ".."
+    // 跳过"."和".."
     if (strcmp(buffer, ".") != 0 && strcmp(buffer, "..") != 0) {
       files.push_back(JoinPath(directory_path, buffer));
     }
@@ -281,7 +281,7 @@ std::vector<std::string> FileUtils::ListFilesInDirectory(
 
   _pclose(pipe);
 #else
-  // On POSIX platforms, use dirent
+  // 在POSIX平台上，使用dirent
   DIR* dir = opendir(directory_path.c_str());
   if (dir != nullptr) {
     struct dirent* entry;
@@ -297,7 +297,7 @@ std::vector<std::string> FileUtils::ListFilesInDirectory(
   return files;
 }
 
-// Get file size in bytes
+// 获取文件大小（字节）
 uint64_t FileUtils::GetFileSize(const std::string& file_path) {
   try {
     std::ifstream file(file_path, std::ios::binary | std::ios::ate);

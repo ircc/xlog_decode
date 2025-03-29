@@ -1,7 +1,7 @@
 // Copyright (c) 2023-2024 xlog_decode contributors
 // Licensed under the MIT License
 //
-// xlog_decoder.cpp - Implementation of the XlogDecoder class
+// xlog_decoder.cpp - XlogDecoder类的实现
 
 #include "xlog_decoder.h"
 
@@ -23,7 +23,7 @@
 namespace xlog_decode {
 
 namespace {
-// Predefined buffer chunk size for decompression
+// 预定义的解压缩缓冲区块大小
 constexpr size_t kChunkSize = 1024;
 }  // namespace
 
@@ -83,7 +83,7 @@ bool XlogDecoder::IsZipFile(const std::string& file_path) {
       return false;
     }
 
-    // ZIP signature is 'PK\x03\x04'
+    // ZIP签名是'PK\x03\x04'
     char signature[4];
     file.read(signature, sizeof(signature));
 
@@ -111,10 +111,10 @@ bool XlogDecoder::DecodeFile(const std::string& input_file,
     return false;
   }
 
-  // Reset sequence counter
+  // 重置序列计数器
   last_seq_ = 0;
 
-  // Determine file type and call appropriate decoder
+  // 确定文件类型并调用相应的解码器
   if (IsMarsXlogV2(input_file) || IsMarsXlogV3(input_file)) {
     return ParseMarsXlogFile(input_file, output_file, skip_error_blocks);
   } else if (IsZipFile(input_file)) {
@@ -128,7 +128,7 @@ bool XlogDecoder::ParseMarsXlogFile(const std::string& input_file,
                                     const std::string& output_file,
                                     bool skip_error_blocks) {
   try {
-    // Read the entire input file into a buffer
+    // 将整个输入文件读入缓冲区
     std::vector<uint8_t> buffer;
     if (!FileUtils::ReadFile(input_file, buffer)) {
       std::cerr << "Failed to read input file: " << input_file << std::endl;
@@ -140,11 +140,11 @@ bool XlogDecoder::ParseMarsXlogFile(const std::string& input_file,
       return false;
     }
 
-    // Find possible start positions for valid blocks
+    // 查找有效块的可能起始位置
     std::vector<int32_t> start_positions;
-    start_positions.push_back(0);  // Always try from the beginning
+    start_positions.push_back(0);  // 总是从开始处尝试
 
-    // Add other potential start positions
+    // 添加其他潜在的起始位置
     for (size_t i = 1; i < buffer.size(); ++i) {
       uint8_t magic = buffer[i];
       if (magic == MAGIC_NO_COMPRESS_START ||
@@ -160,7 +160,7 @@ bool XlogDecoder::ParseMarsXlogFile(const std::string& input_file,
       }
     }
 
-    // Try to decode from each possible start position
+    // 从每个可能的起始位置尝试解码
     std::vector<uint8_t> output_buffer;
     bool success = false;
 
@@ -184,7 +184,7 @@ bool XlogDecoder::ParseMarsXlogFile(const std::string& input_file,
           break;
         }
       } catch (const std::exception&) {
-        // Try the next start position
+        // 尝试下一个起始位置
         continue;
       }
     }
@@ -201,13 +201,12 @@ bool XlogDecoder::ParseMarsXlogFile(const std::string& input_file,
       return false;
     }
 
-    // Write the decoded data to the output file
+    // 将解码后的数据写入输出文件
     if (!FileUtils::WriteFile(output_file, output_buffer)) {
       std::cerr << "Failed to write output file: " << output_file << std::endl;
       return false;
     }
 
-    // std::cout << "Successfully decoded: " << output_file << std::endl;
     return true;
   } catch (const std::exception& e) {
     std::cerr << "Error decoding file: " << e.what() << std::endl;
@@ -217,8 +216,8 @@ bool XlogDecoder::ParseMarsXlogFile(const std::string& input_file,
 
 bool XlogDecoder::DecodeZipFile(const std::string& input_file,
                                 const std::string& output_file) {
-  // Note: This is a placeholder. For a real implementation, you would use a ZIP
-  // library such as libzip, zlib, or minizip to handle ZIP files.
+  // 注意：这只是一个占位符。要实际实现，你需要使用ZIP库
+  // 比如libzip、zlib或minizip来处理ZIP文件。
   std::cerr << "ZIP decoding is not implemented in this version" << std::endl;
   return false;
 }
@@ -268,7 +267,7 @@ std::pair<bool, std::string> XlogDecoder::IsValidLogBuffer(
       return {false, oss.str()};
     }
 
-    // Extract the length field from the header
+    // 从头部提取长度字段
     uint32_t length = 0;
     std::memcpy(&length,
                 &buffer[current_offset + header_len - 4 - crypt_key_len],
@@ -292,7 +291,7 @@ std::pair<bool, std::string> XlogDecoder::IsValidLogBuffer(
       return {false, oss.str()};
     }
 
-    // Decrement counter and update current offset
+    // 递减计数器并更新当前偏移量
     remaining_count--;
     if (remaining_count <= 0) {
       return {true, ""};
@@ -307,7 +306,7 @@ int32_t XlogDecoder::FindLogStartPosition(const std::vector<uint8_t>& buffer,
   int32_t offset = 0;
 
   while (static_cast<size_t>(offset) < buffer.size()) {
-    // Check all possible magic values
+    // 检查所有可能的魔数值
     uint8_t value = buffer[offset];
     if (value == MAGIC_NO_COMPRESS_START || value == MAGIC_NO_COMPRESS_START1 ||
         value == MAGIC_COMPRESS_START || value == MAGIC_COMPRESS_START1 ||
@@ -318,22 +317,22 @@ int32_t XlogDecoder::FindLogStartPosition(const std::vector<uint8_t>& buffer,
         value == MAGIC_SYNC_NO_CRYPT_ZSTD_START ||
         value == MAGIC_ASYNC_ZSTD_START ||
         value == MAGIC_ASYNC_NO_CRYPT_ZSTD_START) {
-      // Try to validate the log buffer
+      // 尝试验证日志缓冲区
       try {
         auto result = IsValidLogBuffer(buffer, offset, count);
         if (result.first) {
           return offset;
         }
       } catch (...) {
-        // Ignore exceptions and continue searching
+        // 忽略异常并继续搜索
       }
     }
 
     offset++;
   }
 
-  // If we've exhausted the buffer without finding a valid start,
-  // return 0 to try parsing from the beginning
+  // 如果我们已经搜索完整个缓冲区但没有找到有效的起始位置，
+  // 返回0以尝试从头开始解析
   return 0;
 }
 
@@ -345,7 +344,7 @@ int32_t XlogDecoder::DecodeBlock(const std::vector<uint8_t>& buffer,
     return -1;
   }
 
-  // Check if this is a valid log buffer
+  // 检查这是否是一个有效的日志缓冲区
   auto result = IsValidLogBuffer(buffer, offset, 1);
   if (!result.first) {
     if (skip_error_blocks) {
@@ -363,7 +362,7 @@ int32_t XlogDecoder::DecodeBlock(const std::vector<uint8_t>& buffer,
         offset += fix_pos;
       }
     } else {
-      // Not skipping error blocks, just return error
+      // 不跳过错误块，直接返回错误
       return -1;
     }
   }
@@ -395,7 +394,7 @@ int32_t XlogDecoder::DecodeBlock(const std::vector<uint8_t>& buffer,
 
   uint32_t header_len = 1 + 2 + 1 + 1 + 4 + crypt_key_len;
 
-  // Extract header fields
+  // 提取头部字段
   uint32_t length = 0;
   uint16_t seq = 0;
   uint8_t begin_hour = 0;
@@ -408,12 +407,12 @@ int32_t XlogDecoder::DecodeBlock(const std::vector<uint8_t>& buffer,
   begin_hour = buffer[offset + header_len - 4 - crypt_key_len - 1 - 1];
   end_hour = buffer[offset + header_len - 4 - crypt_key_len - 1];
 
-  // Copy the body data
+  // 复制主体数据
   std::vector<uint8_t> body_buffer(
       buffer.begin() + offset + header_len,
       buffer.begin() + offset + header_len + length);
 
-  // Check sequence numbers for continuity
+  // 检查序列号的连续性
   if (seq != 0 && seq != 1 && last_seq_ != 0 && seq != (last_seq_ + 1)) {
     std::string warning =
         "[F]xlog_decode log seq:" + std::to_string(last_seq_ + 1) + "-" +
@@ -426,17 +425,17 @@ int32_t XlogDecoder::DecodeBlock(const std::vector<uint8_t>& buffer,
   }
 
   try {
-    // Handle different compression formats
+    // 处理不同的压缩格式
     if (magic_start == MAGIC_NO_COMPRESS_START1 ||
         magic_start == MAGIC_COMPRESS_START2) {
-      // Legacy format - no specific handling needed
+      // 旧格式 - 无需特殊处理
       output_buffer.insert(output_buffer.end(), body_buffer.begin(),
                            body_buffer.end());
     } else if (magic_start == MAGIC_SYNC_ZSTD_START ||
                magic_start == MAGIC_SYNC_NO_CRYPT_ZSTD_START ||
                magic_start == MAGIC_ASYNC_ZSTD_START ||
                magic_start == MAGIC_ASYNC_NO_CRYPT_ZSTD_START) {
-      // ZSTD compression
+      // ZSTD压缩
       if (!DecompressZstd(body_buffer.data(), body_buffer.size(),
                           output_buffer)) {
         std::string error_msg = "[F]xlog_decode ZSTD decompress error\n";
@@ -445,7 +444,7 @@ int32_t XlogDecoder::DecodeBlock(const std::vector<uint8_t>& buffer,
       }
     } else if (magic_start == MAGIC_COMPRESS_START ||
                magic_start == MAGIC_COMPRESS_NO_CRYPT_START) {
-      // ZLIB compression
+      // ZLIB压缩
       if (!DecompressZlib(body_buffer.data(), body_buffer.size(),
                           output_buffer)) {
         std::string error_msg = "[F]xlog_decode decompress error\n";
@@ -453,7 +452,7 @@ int32_t XlogDecoder::DecodeBlock(const std::vector<uint8_t>& buffer,
                              error_msg.end());
       }
     } else if (magic_start == MAGIC_COMPRESS_START1) {
-      // Special format with embedded length
+      // 带嵌入长度的特殊格式
       std::vector<uint8_t> decompress_data;
       size_t pos = 0;
 
@@ -483,7 +482,7 @@ int32_t XlogDecoder::DecodeBlock(const std::vector<uint8_t>& buffer,
                              error_msg.end());
       }
     } else {
-      // No compression, just append the data
+      // 无压缩，直接追加数据
       output_buffer.insert(output_buffer.end(), body_buffer.begin(),
                            body_buffer.end());
     }
@@ -494,7 +493,7 @@ int32_t XlogDecoder::DecodeBlock(const std::vector<uint8_t>& buffer,
                          error_msg.end());
   }
 
-  // Return the position after this block
+  // 返回此块之后的位置
   return offset + header_len + length + 1;
 }
 
@@ -503,30 +502,30 @@ bool XlogDecoder::DecompressZlib(const uint8_t* input_data,
                                  std::vector<uint8_t>& output_buffer) {
   // 恢复zlib解压缩实现
   if (input_size == 0) {
-    return true;  // Nothing to decompress
+    return true;  // 没有需要解压的数据
   }
 
   z_stream strm;
   unsigned char out[kChunkSize];
 
-  // Initialize zlib for decompression
+  // 初始化zlib进行解压缩
   strm.zalloc = Z_NULL;
   strm.zfree = Z_NULL;
   strm.opaque = Z_NULL;
   strm.avail_in = 0;
   strm.next_in = Z_NULL;
 
-  int ret = inflateInit2(&strm, -MAX_WBITS);  // Raw deflate format
+  int ret = inflateInit2(&strm, -MAX_WBITS);  // 原始deflate格式
   if (ret != Z_OK) {
     return false;
   }
 
-  // Set input data
+  // 设置输入数据
   strm.avail_in = static_cast<uInt>(input_size);
-  strm.next_in = const_cast<Bytef*>(
-      input_data);  // Safe cast because zlib doesn't modify input
+  strm.next_in =
+      const_cast<Bytef*>(input_data);  // 安全的转换，因为zlib不会修改输入
 
-  // Decompress until done
+  // 解压直到完成
   do {
     strm.avail_out = kChunkSize;
     strm.next_out = out;
@@ -545,7 +544,7 @@ bool XlogDecoder::DecompressZlib(const uint8_t* input_data,
 
   } while (strm.avail_out == 0);
 
-  // Clean up
+  // 清理
   inflateEnd(&strm);
   return ret == Z_STREAM_END || ret == Z_OK;
 }
@@ -554,7 +553,7 @@ bool XlogDecoder::DecompressZstd(const uint8_t* input_data,
                                  size_t input_size,
                                  std::vector<uint8_t>& output_buffer) {
   if (input_size == 0) {
-    return true;  // Nothing to decompress
+    return true;  // 没有需要解压的数据
   }
 
   // 获取解压后的大小

@@ -1,7 +1,7 @@
 // Copyright (c) 2023-2024 xlog_decode contributors
 // Licensed under the MIT License
 //
-// xlog_decoder.h - XLOG format decoder class
+// xlog_decoder.h - XLOG格式解码器类
 
 #ifndef XLOG_DECODE_XLOG_DECODER_H_
 #define XLOG_DECODE_XLOG_DECODER_H_
@@ -15,73 +15,73 @@
 
 namespace xlog_decode {
 
-// XlogDecoder class handles decoding of XLOG format files
+// XlogDecoder类处理XLOG格式文件的解码
 class XlogDecoder {
  public:
   XlogDecoder();
   ~XlogDecoder();
 
-  // Disable copy and assignment
+  // 禁用拷贝和赋值
   XlogDecoder(const XlogDecoder&) = delete;
   XlogDecoder& operator=(const XlogDecoder&) = delete;
 
-  // Check if file is a valid XLOG file
+  // 检查文件是否为有效的XLOG文件
   static bool IsXlogFile(const std::string& file_path);
 
-  // Check if file is a valid XLOG v2 format (ZLIB compression)
+  // 检查文件是否为有效的XLOG v2格式（ZLIB压缩）
   static bool IsMarsXlogV2(const std::string& file_path);
 
-  // Check if file is a valid XLOG v3 format (ZSTD compression)
+  // 检查文件是否为有效的XLOG v3格式（ZSTD压缩）
   static bool IsMarsXlogV3(const std::string& file_path);
 
-  // Check if file is a standard ZIP file
+  // 检查文件是否为标准ZIP文件
   static bool IsZipFile(const std::string& file_path);
 
-  // Decode a single XLOG file
+  // 解码单个XLOG文件
   bool DecodeFile(const std::string& input_file,
                   const std::string& output_file,
                   bool skip_error_blocks = true);
 
-  // Generate output filename based on input filename
+  // 根据输入文件名生成输出文件名
   static std::string GenerateOutputFilename(const std::string& input_file);
 
  private:
-  // Parse Mars XLOG formatted file
+  // 解析Mars XLOG格式文件
   bool ParseMarsXlogFile(const std::string& input_file,
                          const std::string& output_file,
                          bool skip_error_blocks);
 
-  // Decode ZIP formatted file
+  // 解码ZIP格式文件
   bool DecodeZipFile(const std::string& input_file,
                      const std::string& output_file);
 
-  // Decode a single block of XLOG data
+  // 解码单个XLOG数据块
   int32_t DecodeBlock(const std::vector<uint8_t>& buffer,
                       int32_t offset,
                       std::vector<uint8_t>& output_buffer,
                       bool skip_error_blocks);
 
-  // Check if a buffer contains valid XLOG data
+  // 检查缓冲区是否包含有效的XLOG数据
   std::pair<bool, std::string> IsValidLogBuffer(
       const std::vector<uint8_t>& buffer,
       int32_t offset,
       int32_t count);
 
-  // Find the start position of a valid XLOG block
+  // 查找有效XLOG块的起始位置
   int32_t FindLogStartPosition(const std::vector<uint8_t>& buffer,
                                int32_t count);
 
-  // Decompress ZLIB compressed data
+  // 解压ZLIB压缩数据
   bool DecompressZlib(const uint8_t* input_data,
                       size_t input_size,
                       std::vector<uint8_t>& output_buffer);
 
-  // Decompress ZSTD compressed data
+  // 解压ZSTD压缩数据
   bool DecompressZstd(const uint8_t* input_data,
                       size_t input_size,
                       std::vector<uint8_t>& output_buffer);
 
-  // Global sequence number for log continuity checking
+  // 用于日志连续性检查的全局序列号
   uint16_t last_seq_ = 0;
 };
 

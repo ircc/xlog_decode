@@ -33,3 +33,6 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 change-email.sh
+compile_commands.json
+/.cache
+/test
