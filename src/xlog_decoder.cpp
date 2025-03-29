@@ -12,8 +12,10 @@
 #include <sstream>
 #include <stdexcept>
 
-// 临时注释掉zlib.h引用，需要后续添加库支持
-// #include <zlib.h>
+// 恢复zlib.h的引用
+#include <zlib.h>
+// 添加zstd.h引用
+#include <zstd.h>
 
 #include "file_utils.h"
 #include "xlog_constants.h"
@@ -441,15 +443,21 @@ int32_t XlogDecoder::DecodeBlock(const std::vector<uint8_t>& buffer,
   try {
     // Handle different compression formats
     if (magic_start == MAGIC_NO_COMPRESS_START1 ||
-        magic_start == MAGIC_COMPRESS_START2 ||
-        magic_start == MAGIC_SYNC_ZSTD_START ||
-        magic_start == MAGIC_ASYNC_ZSTD_START ||
-        magic_start == MAGIC_ASYNC_NO_CRYPT_ZSTD_START) {
-      // ZSTD compression not supported
-      std::string warning =
-          "Warning: ZSTD compression detected but not supported in this "
-          "version\n";
-      output_buffer.insert(output_buffer.end(), warning.begin(), warning.end());
+        magic_start == MAGIC_COMPRESS_START2) {
+      // Legacy format - no specific handling needed
+      output_buffer.insert(output_buffer.end(), body_buffer.begin(),
+                           body_buffer.end());
+    } else if (magic_start == MAGIC_SYNC_ZSTD_START ||
+               magic_start == MAGIC_SYNC_NO_CRYPT_ZSTD_START ||
+               magic_start == MAGIC_ASYNC_ZSTD_START ||
+               magic_start == MAGIC_ASYNC_NO_CRYPT_ZSTD_START) {
+      // ZSTD compression
+      if (!DecompressZstd(body_buffer.data(), body_buffer.size(),
+                          output_buffer)) {
+        std::string error_msg = "[F]xlog_decode ZSTD decompress error\n";
+        output_buffer.insert(output_buffer.end(), error_msg.begin(),
+                             error_msg.end());
+      }
     } else if (magic_start == MAGIC_COMPRESS_START ||
                magic_start == MAGIC_COMPRESS_NO_CRYPT_START) {
       // ZLIB compression
@@ -508,8 +516,7 @@ int32_t XlogDecoder::DecodeBlock(const std::vector<uint8_t>& buffer,
 bool XlogDecoder::DecompressZlib(const uint8_t* input_data,
                                  size_t input_size,
                                  std::vector<uint8_t>& output_buffer) {
-  // 临时注释掉zlib相关实现，需要后续添加库支持
-  /*
+  // 恢复zlib解压缩实现
   if (input_size == 0) {
     return true;  // Nothing to decompress
   }
@@ -556,12 +563,60 @@ bool XlogDecoder::DecompressZlib(const uint8_t* input_data,
   // Clean up
   inflateEnd(&strm);
   return ret == Z_STREAM_END || ret == Z_OK;
-  */
+}
 
-  // 临时返回false，表示zlib解压缩未实现
-  std::cerr << "Warning: zlib decompression is not implemented yet"
-            << std::endl;
-  return false;
+bool XlogDecoder::DecompressZstd(const uint8_t* input_data,
+                                 size_t input_size,
+                                 std::vector<uint8_t>& output_buffer) {
+  if (input_size == 0) {
+    return true;  // Nothing to decompress
+  }
+
+  // 获取解压后的大小
+  unsigned long long const frame_content_size =
+      ZSTD_getFrameContentSize(input_data, input_size);
+  if (frame_content_size == ZSTD_CONTENTSIZE_ERROR ||
+      frame_content_size == ZSTD_CONTENTSIZE_UNKNOWN) {
+    // 无法确定大小，使用增量解压
+    size_t const out_bufsize = ZSTD_DStreamOutSize();
+    std::vector<char> out_buffer(out_bufsize);
+
+    ZSTD_DStream* const dstream = ZSTD_createDStream();
+    if (dstream == nullptr) {
+      return false;
+    }
+
+    ZSTD_initDStream(dstream);
+
+    ZSTD_inBuffer input = {input_data, input_size, 0};
+    while (input.pos < input.size) {
+      ZSTD_outBuffer output = {out_buffer.data(), out_buffer.size(), 0};
+      size_t const ret = ZSTD_decompressStream(dstream, &output, &input);
+      if (ZSTD_isError(ret)) {
+        ZSTD_freeDStream(dstream);
+        return false;
+      }
+      output_buffer.insert(output_buffer.end(), out_buffer.begin(),
+                           out_buffer.begin() + output.pos);
+    }
+
+    ZSTD_freeDStream(dstream);
+    return true;
+  } else {
+    // 已知解压后大小，直接解压
+    std::vector<char> decompress_buffer(frame_content_size);
+    size_t const dsize =
+        ZSTD_decompress(decompress_buffer.data(), decompress_buffer.size(),
+                        input_data, input_size);
+
+    if (ZSTD_isError(dsize)) {
+      return false;
+    }
+
+    output_buffer.insert(output_buffer.end(), decompress_buffer.begin(),
+                         decompress_buffer.begin() + dsize);
+    return true;
+  }
 }
 
 }  // namespace xlog_decode

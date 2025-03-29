@@ -76,6 +76,11 @@ class XlogDecoder {
                       size_t input_size,
                       std::vector<uint8_t>& output_buffer);
 
+  // Decompress ZSTD compressed data
+  bool DecompressZstd(const uint8_t* input_data,
+                      size_t input_size,
+                      std::vector<uint8_t>& output_buffer);
+
   // Global sequence number for log continuity checking
   uint16_t last_seq_ = 0;
 };

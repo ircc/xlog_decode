@@ -7,6 +7,10 @@ set_version("1.0.0")
 set_xmakever("2.7.0")
 set_languages("c++17")
 
+-- 添加依赖包
+add_requires("zlib", {configs = {shared = false}})
+add_requires("zstd", {configs = {shared = false, cmake = true}})
+
 -- 平台特定配置
 if is_plat("windows") then
     add_defines("NOMINMAX", "WIN32_LEAN_AND_MEAN", "NOGDI", "NOUSER")
@@ -38,6 +42,7 @@ target("xlog_decoder")
     set_kind("static")
     add_files("src/xlog_decoder.cpp")
     add_deps("file_utils")
+    add_packages("zlib", "zstd")
 
 -- 第三方库依赖，仅在文件存在时添加
 -- add_includedirs("third_party/zlib")
@@ -52,6 +57,7 @@ target("xlog_decode")
     set_kind("binary")
     add_files("src/main.cpp")
     add_deps("file_utils", "xlog_decoder")
+    add_packages("zlib", "zstd")
 
 -- 测试程序
 target("test_file_utils")
@@ -68,3 +74,4 @@ target("test_xlog_decoder")
     set_kind("binary")
     add_files("test/test_xlog_decoder.cpp")
     add_deps("file_utils", "xlog_decoder")
+    add_packages("zlib", "zstd")
