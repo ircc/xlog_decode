@@ -222,7 +222,7 @@ bool XlogDecoder::ParseMarsXlogFile(const std::string& input_file,
       return false;
     }
 
-    std::cout << "Successfully decoded: " << output_file << std::endl;
+    // std::cout << "Successfully decoded: " << output_file << std::endl;
     return true;
   } catch (const std::exception& e) {
     std::cerr << "Error decoding file: " << e.what() << std::endl;

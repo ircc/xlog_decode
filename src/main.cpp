@@ -3,6 +3,7 @@
 //
 // main.cpp - Main entry point for the xlog_decode tool
 
+#include <chrono>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -32,8 +33,9 @@ void PrintUsage() {
   std::cout << "  clean    - Delete all decoded files in a directory\n";
   std::cout << "  help     - Show this help information\n\n";
   std::cout << "Options:\n";
-  std::cout
-      << "  -r, --recursive   - Process files recursively in subdirectories\n";
+  std::cout << "  -r, --recursive   - Process files recursively in "
+               "subdirectories (enabled by default for decode)\n";
+  std::cout << "  --no-recursive    - Disable recursive processing\n";
   std::cout << "  -k, --keep-errors - Don't skip blocks with errors during "
                "decoding\n";
   std::cout << "  -v, --version     - Show version information\n\n";
@@ -42,8 +44,10 @@ void PrintUsage() {
       << "  xlog_decode help                        - Show help information\n";
   std::cout
       << "  xlog_decode decode path/to/file.xlog    - Decode a single file\n";
-  std::cout << "  xlog_decode decode -r path/to/dir       - Decode all XLOG "
+  std::cout << "  xlog_decode decode path/to/dir          - Decode all XLOG "
                "files in directory and subdirectories\n";
+  std::cout << "  xlog_decode decode --no-recursive path/to/dir - Decode XLOG "
+               "files only in the top directory\n";
   std::cout << "  xlog_decode clean -r path/to/dir        - Delete all decoded "
                "files in directory and subdirectories\n";
 }
@@ -56,11 +60,24 @@ bool DecodeFile(const std::string& file_path, bool skip_error_blocks) {
         xlog_decode::XlogDecoder::GenerateOutputFilename(file_path);
 
     std::cout << "Decoding: " << file_path << std::endl;
-    if (decoder.DecodeFile(file_path, output_file, skip_error_blocks)) {
-      std::cout << "Successfully decoded to: " << output_file << std::endl;
+
+    // Add timing measurement
+    auto start_time = std::chrono::high_resolution_clock::now();
+
+    bool result = decoder.DecodeFile(file_path, output_file, skip_error_blocks);
+
+    // Calculate elapsed time
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+        end_time - start_time);
+
+    if (result) {
+      std::cout << "Successfully decoded to: " << output_file
+                << " (Time: " << duration.count() << "ms)" << std::endl;
       return true;
     } else {
-      std::cerr << "Failed to decode file: " << file_path << std::endl;
+      std::cerr << "Failed to decode file: " << file_path
+                << " (Time: " << duration.count() << "ms)" << std::endl;
       return false;
     }
   } catch (const std::exception& e) {
@@ -77,7 +94,7 @@ int ProcessDecodeCommand(const std::vector<std::string>& args) {
     return 1;
   }
 
-  bool recursive = false;
+  bool recursive = true;  // Set recursive to true by default
   bool skip_error_blocks = true;
   std::string path;
 
@@ -85,6 +102,8 @@ int ProcessDecodeCommand(const std::vector<std::string>& args) {
   for (size_t i = 0; i < args.size(); ++i) {
     if (args[i] == "-r" || args[i] == "--recursive") {
       recursive = true;
+    } else if (args[i] == "--no-recursive") {
+      recursive = false;  // Add option to disable recursive search
     } else if (args[i] == "-k" || args[i] == "--keep-errors") {
       skip_error_blocks = false;
     } else if (path.empty()) {
