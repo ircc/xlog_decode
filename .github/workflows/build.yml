@@ -13,22 +13,20 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Install CMake
-      uses: jwlawson/actions-setup-cmake@v1.13
+    - name: Setup xmake
+      uses: xmake-io/github-action-setup-xmake@v1
       with:
-        cmake-version: '3.21.x'
+        xmake-version: latest
 
     - name: Build
       run: |
-        mkdir -p build
-        cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release
-        cmake --build . --config Release
+        xmake config -p windows -a x64 -m release
+        xmake
 
     - name: Package
       run: |
         mkdir -p dist
-        cp build/Release/test_file_utils.exe dist/
+        xmake install -o dist
         cp LICENSE dist/
         cp README.md dist/
         Compress-Archive -Path dist/* -DestinationPath xlog_decode-win-x64.zip
@@ -44,22 +42,20 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Install CMake
-      uses: jwlawson/actions-setup-cmake@v1.13
+    - name: Setup xmake
+      uses: xmake-io/github-action-setup-xmake@v1
       with:
-        cmake-version: '3.21.x'
+        xmake-version: latest
 
     - name: Build
       run: |
-        mkdir -p build
-        cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release
-        cmake --build .
+        xmake config -p macosx -a x86_64 -m release
+        xmake
 
     - name: Package
       run: |
         mkdir -p dist
-        cp build/test_file_utils dist/
+        xmake install -o dist
         cp LICENSE dist/
         cp README.md dist/
         zip -r xlog_decode-macos-x64.zip dist/*
@@ -75,22 +71,20 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Install CMake
-      uses: jwlawson/actions-setup-cmake@v1.13
+    - name: Setup xmake
+      uses: xmake-io/github-action-setup-xmake@v1
       with:
-        cmake-version: '3.21.x'
+        xmake-version: latest
 
     - name: Build
       run: |
-        mkdir -p build
-        cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release
-        cmake --build .
+        xmake config -p linux -a x86_64 -m release
+        xmake
 
     - name: Package
       run: |
         mkdir -p dist
-        cp build/test_file_utils dist/
+        xmake install -o dist
         cp LICENSE dist/
         cp README.md dist/
         zip -r xlog_decode-linux-x64.zip dist/*

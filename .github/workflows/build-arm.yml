@@ -13,28 +13,20 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Install CMake
-      uses: jwlawson/actions-setup-cmake@v1.13
+    - name: Setup xmake
+      uses: xmake-io/github-action-setup-xmake@v1
       with:
-        cmake-version: '3.21.x'
-
-    - name: Install Ninja
-      run: |
-        curl -L https://github.com/ninja-build/ninja/releases/download/v1.10.2/ninja-mac.zip -o ninja.zip
-        unzip ninja.zip
-        echo "$PWD" >> $GITHUB_PATH
+        xmake-version: latest
 
     - name: Build for ARM
       run: |
-        mkdir -p build
-        cd build
-        cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=arm64
-        ninja
+        xmake config -p macosx -a arm64 -m release
+        xmake
 
     - name: Package
       run: |
         mkdir -p dist
-        cp build/test_file_utils dist/
+        xmake install -o dist
         cp LICENSE dist/
         cp README.md dist/
         zip -r xlog_decode-macos-arm64.zip dist/*

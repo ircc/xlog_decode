@@ -12,7 +12,8 @@
 #include <sstream>
 #include <stdexcept>
 
-#include <zlib.h>
+// 临时注释掉zlib.h引用，需要后续添加库支持
+// #include <zlib.h>
 
 #include "file_utils.h"
 #include "xlog_constants.h"
@@ -507,6 +508,8 @@ int32_t XlogDecoder::DecodeBlock(const std::vector<uint8_t>& buffer,
 bool XlogDecoder::DecompressZlib(const uint8_t* input_data,
                                  size_t input_size,
                                  std::vector<uint8_t>& output_buffer) {
+  // 临时注释掉zlib相关实现，需要后续添加库支持
+  /*
   if (input_size == 0) {
     return true;  // Nothing to decompress
   }
@@ -553,6 +556,12 @@ bool XlogDecoder::DecompressZlib(const uint8_t* input_data,
   // Clean up
   inflateEnd(&strm);
   return ret == Z_STREAM_END || ret == Z_OK;
+  */
+
+  // 临时返回false，表示zlib解压缩未实现
+  std::cerr << "Warning: zlib decompression is not implemented yet"
+            << std::endl;
+  return false;
 }
 
 }  // namespace xlog_decode

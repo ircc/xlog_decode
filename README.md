@@ -80,9 +80,8 @@ Examples:
 
 ### 环境要求
 
-- GN 构建系统
+- xmake 构建系统 (2.7.0+)
 - 支持 C++17 的编译器
-- zlib 库 (项目中已包含)
 
 ### 获取源代码
 
@@ -93,17 +92,54 @@ cd xlog_decode
 
 ### 构建项目
 
-1. 生成构建文件:
+1. 配置项目:
 
    ```bash
-   gn gen out/Release --args="is_debug=false"
+   xmake config -m release
    ```
 
 2. 编译项目:
 
    ```bash
-   ninja -C out/Release
+   xmake
    ```
+
+3. 运行测试:
+
+   ```bash
+   xmake run test_file_utils
+   xmake run test_xlog_decoder
+   ```
+
+4. 安装程序（可选）:
+
+   ```bash
+   xmake install -o /usr/local/bin
+   ```
+
+### 多平台构建
+
+xmake支持跨平台编译：
+
+- Windows:
+  ```bash
+  xmake f -p windows -a x64 -m release
+  xmake
+  ```
+
+- macOS:
+  ```bash
+  xmake f -p macosx -a x86_64 -m release  # Intel 芯片
+  # 或
+  xmake f -p macosx -a arm64 -m release   # Apple Silicon
+  xmake
+  ```
+
+- Linux:
+  ```bash
+  xmake f -p linux -a x86_64 -m release
+  xmake
+  ```
 
 ### 目录结构
 
@@ -114,11 +150,10 @@ xlog_decode/
 ├── src/                 # 源文件
 ├── third_party/         # 第三方库
 │   └── zlib/            # zlib 压缩库
-├── build/               # 构建脚本和配置
 ├── test/                # 测试文件
 ├── docs/                # 文档
 ├── .gitignore           # Git 忽略文件
-├── BUILD.gn             # GN 构建配置
+├── xmake.lua            # xmake 构建配置
 ├── LICENSE              # 许可证文件
 └── README.md            # 本文件
 ```

@@ -9,16 +9,16 @@
 
 using namespace xlog_decode;
 
-// 测试文件扩展名检测
+// Test file extension detection
 void test_file_extensions() {
   assert(XlogDecoder::IsXlogFile("test.xlog") == true);
   assert(XlogDecoder::IsXlogFile("test.mmap3") == true);
   assert(XlogDecoder::IsXlogFile("test.txt") == false);
 
-  std::cout << "文件扩展名检测测试通过" << std::endl;
+  std::cout << "File extension detection tests passed" << std::endl;
 }
 
-// 测试输出文件名生成
+// Test output filename generation
 void test_output_filename_generation() {
   assert(XlogDecoder::GenerateOutputFilename("test.xlog") == "test_.log");
   assert(XlogDecoder::GenerateOutputFilename("test.mmap3") == "test_.log");
@@ -26,89 +26,89 @@ void test_output_filename_generation() {
   assert(XlogDecoder::GenerateOutputFilename("/path/to/test.xlog") ==
          "/path/to/test_.log");
 
-  std::cout << "输出文件名生成测试通过" << std::endl;
+  std::cout << "Output filename generation tests passed" << std::endl;
 }
 
-// 创建一个简单的测试xlog文件
+// Create a simple test xlog file
 bool create_test_xlog_file(const std::string& filename) {
-  // 创建一个简单的xlog文件结构
+  // Create a simple xlog file structure
   std::vector<uint8_t> buffer;
 
-  // 添加文件头 - MAGIC_NO_COMPRESS_START
+  // Add file header - MAGIC_NO_COMPRESS_START
   buffer.push_back(MAGIC_NO_COMPRESS_START);
 
-  // 序列号 (16位)
+  // Sequence number (16 bit)
   buffer.push_back(0x01);
   buffer.push_back(0x00);
 
-  // 开始小时和结束小时
-  buffer.push_back(0x0A);  // 开始小时
-  buffer.push_back(0x0B);  // 结束小时
+  // Begin hour and end hour
+  buffer.push_back(0x0A);  // Begin hour
+  buffer.push_back(0x0B);  // End hour
 
-  // 数据长度 (32位) - 我们将使用13字节的测试数据
+  // Data length (32 bit) - we will use 13 bytes of test data
   buffer.push_back(0x0D);
   buffer.push_back(0x00);
   buffer.push_back(0x00);
   buffer.push_back(0x00);
 
-  // 加密数据 (对于MAGIC_NO_COMPRESS_START, 4字节)
+  // Encryption data (for MAGIC_NO_COMPRESS_START, 4 bytes)
   buffer.push_back(0x00);
   buffer.push_back(0x00);
   buffer.push_back(0x00);
   buffer.push_back(0x00);
 
-  // 数据部分 - 纯文本 "Hello, world!"
+  // Data section - plain text "Hello, world!"
   const char* test_data = "Hello, world!";
   for (int i = 0; i < 13; i++) {
     buffer.push_back(test_data[i]);
   }
 
-  // 结束标记
+  // End marker
   buffer.push_back(MAGIC_END);
 
-  // 写入文件
+  // Write to file
   return FileUtils::WriteFile(filename, buffer);
 }
 
-// 测试解码功能
+// Test decoding functionality
 void test_decoding() {
   const std::string test_file = "test.xlog";
   const std::string output_file = "test_.log";
 
-  // 创建测试文件
+  // Create test file
   bool created = create_test_xlog_file(test_file);
   assert(created);
 
-  // 解码测试文件
+  // Decode test file
   XlogDecoder decoder;
   bool result = decoder.DecodeFile(test_file, output_file, true);
   assert(result);
 
-  // 验证解码结果
+  // Verify decode result
   std::vector<uint8_t> decoded_data;
   bool read_result = FileUtils::ReadFile(output_file, decoded_data);
   assert(read_result);
 
-  // 验证内容为 "Hello, world!"
+  // Verify content is "Hello, world!"
   std::string decoded_text(decoded_data.begin(), decoded_data.end());
   assert(decoded_text == "Hello, world!");
 
-  // 清理测试文件
+  // Clean up test files
   FileUtils::DeleteFile(test_file);
   FileUtils::DeleteFile(output_file);
 
-  std::cout << "解码功能测试通过" << std::endl;
+  std::cout << "Decoding functionality tests passed" << std::endl;
 }
 
-// 主函数
+// Main function
 int main() {
-  std::cout << "开始运行xlog_decoder测试..." << std::endl;
+  std::cout << "Starting xlog_decoder tests..." << std::endl;
 
-  // 运行测试
+  // Run tests
   test_file_extensions();
   test_output_filename_generation();
   test_decoding();
 
-  std::cout << "所有测试通过!" << std::endl;
+  std::cout << "All tests passed!" << std::endl;
   return 0;
 }
